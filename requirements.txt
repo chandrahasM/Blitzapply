@@ -1,0 +1,8 @@
+langchain-openai
+python-dotenv
+PyPDF2
+pydantic
+browser-use
+playwright
+fastapi
+uvicorn

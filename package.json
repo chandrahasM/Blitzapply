@@ -1,0 +1,40 @@
+{
+  "name": "blitzapply",
+  "version": "1.0.0",
+  "description": "AI-Powered Job Application Automation",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd Frontend && npm start",
+    "dev:backend": "cd backend && python simple_server.py",
+    "build": "cd Frontend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd Frontend && npm test",
+    "test:backend": "cd backend && python test_backend.py",
+    "deploy": "docker-compose up --build -d",
+    "stop": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "clean": "docker-compose down -v --remove-orphans"
+  },
+  "keywords": [
+    "job-application",
+    "automation",
+    "playwright",
+    "react",
+    "python",
+    "ai"
+  ],
+  "author": "BlitzApply Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/blitzapply.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/blitzapply/issues"
+  },
+  "homepage": "https://github.com/yourusername/blitzapply#readme"
+} 

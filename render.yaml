@@ -1,0 +1,25 @@
+services:
+  # Frontend Service (Static Site)
+  - type: web
+    name: blitzapply-frontend
+    env: static
+    buildCommand: cd Frontend && npm install && npm run build
+    staticPublishPath: ./Frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://blitzapply-backend.onrender.com/api
+        sync: false
+
+  # Backend Service (Web Service)
+  - type: web
+    name: blitzapply-backend
+    env: python
+    buildCommand: cd backend && pip install -r requirements.txt && playwright install chromium
+    startCommand: cd backend && python simple_server.py
+    envVars:
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: 8000
+      - key: DEBUG
+        value: false 
