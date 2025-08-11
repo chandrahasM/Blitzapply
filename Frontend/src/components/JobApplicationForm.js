@@ -72,6 +72,17 @@ function JobApplicationForm() {
           const profile = JSON.parse(savedProfile);
           const customFields = JSON.parse(savedCustomFields);
 
+          // Validate that profile has required fields
+          if (!profile.full_name || !profile.email) {
+            setAlert({
+              show: true,
+              type: 'warning',
+              title: 'Profile incomplete',
+              message: 'Please complete your profile with at least your name and email before applying.',
+            });
+            return;
+          }
+
           const userInfo = {
             profile: profile,
             custom_fields: customFields,
@@ -153,7 +164,7 @@ function JobApplicationForm() {
     const newResults = [];
 
     try {
-      // First, save profile to backend
+      // Prepare profile data for backend
       const profileData = {
         ...userInfo.profile,
         user_id: 1, // Mock user ID for now
@@ -161,7 +172,7 @@ function JobApplicationForm() {
         updated_at: new Date().toISOString(),
       };
 
-      // Save custom fields to backend
+      // Prepare custom fields data for backend
       const customFieldsData = userInfo.custom_fields.map((field, index) => ({
         ...field,
         id: index + 1,
@@ -190,7 +201,7 @@ function JobApplicationForm() {
         }]);
 
         try {
-          // Call the real backend API
+          // Call the Playwright backend API
           const response = await submitJobApplication(url);
           
           // Add success log

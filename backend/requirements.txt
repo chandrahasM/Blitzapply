@@ -1,7 +1,6 @@
-fastapi==0.95.2
-uvicorn[standard]==0.22.0
-pydantic==1.10.13
-playwright==1.40.0
-python-multipart==0.0.6
-httpx==0.24.1
-python-dotenv==1.0.0 
+# Simple HTTP server - no external dependencies needed
+# Uses Python's built-in http.server module
+# 
+# If you want to add Playwright later, install with:
+# pip install playwright
+# playwright install chromium 

@@ -16,6 +16,7 @@ import {
   Stack,
   InputAdornment,
   FormHelperText,
+  Input,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -29,6 +30,7 @@ import {
   GitHub as GitHubIcon,
   Language as LanguageIcon,
   Description as DescriptionIcon,
+  Upload as UploadIcon,
 } from "@mui/icons-material";
 import { saveUserProfile, saveUserCustomFields } from "../services/apiService";
 
@@ -39,7 +41,8 @@ function ProfileForm() {
     full_name: "",
     email: "",
     phone: "",
-    resume_url: "",
+    resume_file: null,
+    resume_filename: "",
     linkedin_url: "",
     github_url: "",
     portfolio_url: "",
@@ -57,9 +60,14 @@ function ProfileForm() {
         const savedCustomFields = localStorage.getItem("customFields");
 
         if (savedProfile) {
+          const parsedProfile = JSON.parse(savedProfile);
           setProfile({
-            ...JSON.parse(savedProfile),
+            ...parsedProfile,
             user_id: 1,
+            // Handle legacy resume_url field
+            resume_file: parsedProfile.resume_file || null,
+            resume_filename: parsedProfile.resume_filename || "",
+            resume_url: parsedProfile.resume_url || "",
           });
         }
 
@@ -114,6 +122,66 @@ function ProfileForm() {
     setProfile(prev => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleResumeUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setAlert({
+          show: true,
+          type: 'error',
+          title: 'File too large',
+          message: 'Please select a resume file smaller than 5MB.',
+        });
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setAlert({
+          show: true,
+          type: 'error',
+          title: 'Invalid file type',
+          message: 'Please select a PDF or Word document (.pdf, .doc, .docx).',
+        });
+        return;
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target.result;
+        setProfile(prev => ({
+          ...prev,
+          resume_file: base64String,
+          resume_filename: file.name,
+        }));
+      };
+      reader.readAsDataURL(file);
+
+      setAlert({
+        show: true,
+        type: 'success',
+        title: 'Resume uploaded!',
+        message: `${file.name} has been uploaded successfully.`,
+      });
+
+      // Auto-hide success alert after 3 seconds
+      setTimeout(() => {
+        setAlert({ show: false, type: 'success', title: '', message: '' });
+      }, 3000);
+    }
+  };
+
+  const removeResume = () => {
+    setProfile(prev => ({
+      ...prev,
+      resume_file: null,
+      resume_filename: "",
     }));
   };
 
@@ -313,28 +381,62 @@ function ProfileForm() {
 
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Resume URL"
-                  name="resume_url"
-                  value={profile.resume_url || ""}
-                  onChange={handleProfileChange}
-                  placeholder="https://drive.google.com/file/your-resume"
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <DescriptionIcon sx={{ color: '#000000' }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  helperText="Link to your resume (Google Drive, Dropbox, etc.)"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: '#ffffff',
-                    },
-                  }}
-                />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: '#374151', mb: 1 }}>
+                    Resume File
+                  </Typography>
+                  {profile.resume_file ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: '1px solid #d1d5db', borderRadius: 1, backgroundColor: '#f9fafb' }}>
+                      <DescriptionIcon sx={{ color: '#000000' }} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="body2" sx={{ color: '#000000', fontWeight: 500 }}>
+                          {profile.resume_filename}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                          Resume uploaded successfully
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={removeResume}
+                        sx={{ color: '#dc2626', borderColor: '#dc2626' }}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Box>
+                      <input
+                        accept=".pdf,.doc,.docx"
+                        style={{ display: 'none' }}
+                        id="resume-upload"
+                        type="file"
+                        onChange={handleResumeUpload}
+                      />
+                      <label htmlFor="resume-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          startIcon={<UploadIcon />}
+                          sx={{
+                            borderColor: '#d1d5db',
+                            color: '#000000',
+                            '&:hover': {
+                              borderColor: '#000000',
+                              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                            },
+                          }}
+                        >
+                          Upload Resume
+                        </Button>
+                      </label>
+                      <FormHelperText sx={{ color: '#6b7280', mt: 1 }}>
+                        Upload your resume (PDF, DOC, or DOCX). Max size: 5MB.
+                      </FormHelperText>
+                    </Box>
+                  )}
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
