@@ -76,12 +76,25 @@ class MockPlaywrightService:
         mapper = SimpleFieldMapper()
         filled_fields = []
         
-        # Simulate common form fields
+        # Simulate more realistic form field detection
+        # Common job application form fields with variations
         simulated_fields = [
-            "Full Name", "Email Address", "Phone Number", "Location", "Experience"
+            "Full Name", "Name", "First Name", "Last Name", "Full Name",
+            "Email", "Email Address", "E-mail", "Contact Email",
+            "Phone", "Phone Number", "Telephone", "Mobile", "Cell Phone",
+            "Location", "City", "State", "Country", "Address", "Current Location",
+            "Experience", "Years of Experience", "Work Experience", "Professional Experience",
+            "Resume", "CV", "Resume File", "CV File", "Upload Resume",
+            "LinkedIn", "LinkedIn Profile", "LinkedIn URL",
+            "GitHub", "GitHub Profile", "GitHub URL",
+            "Portfolio", "Portfolio URL", "Website", "Personal Website"
         ]
         
-        for field_label in simulated_fields:
+        # Simulate finding and filling fields with some randomness
+        import random
+        found_fields = random.sample(simulated_fields, min(random.randint(5, 8), len(simulated_fields)))
+        
+        for field_label in found_fields:
             match = mapper.find_matching_field(field_label, profile_data, custom_fields)
             if match:
                 filled_fields.append({
@@ -89,14 +102,57 @@ class MockPlaywrightService:
                     "answer": match["value"],
                     "source": match["source"]
                 })
+            else:
+                # Simulate some fields that couldn't be filled
+                filled_fields.append({
+                    "question": field_label,
+                    "answer": "[Field detected but no matching data found]",
+                    "source": "unmatched"
+                })
+        
+        # Try to extract company and job info from URL
+        company_name = "Company"
+        job_title = "Position"
+        
+        # Extract domain from URL for company name
+        try:
+            from urllib.parse import urlparse
+            parsed_url = urlparse(job_url)
+            domain = parsed_url.netloc
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            if '.' in domain:
+                company_name = domain.split('.')[0].title()
+        except:
+            pass
+        
+        # Try to extract job title from URL path
+        try:
+            path_parts = parsed_url.path.split('/')
+            for part in path_parts:
+                if part and len(part) > 3 and not part.isdigit():
+                    # Clean up the part to make it look like a job title
+                    job_title = part.replace('-', ' ').replace('_', ' ').title()
+                    break
+        except:
+            pass
+        
+        # Simulate some missing fields that couldn't be filled
+        missing_fields = []
+        if not profile_data.get("phone"):
+            missing_fields.append("Phone Number")
+        if not profile_data.get("location"):
+            missing_fields.append("Location")
+        if not profile_data.get("experience"):
+            missing_fields.append("Experience")
         
         return {
             "status": "success",
-            "company_name": "Mock Company",
-            "job_title": "Mock Position",
-            "questions_answered": len(filled_fields),
+            "company_name": company_name,
+            "job_title": job_title,
+            "questions_answered": len([f for f in filled_fields if f["source"] != "unmatched"]),
             "questions_and_answers": filled_fields,
-            "missing_fields": [],
+            "missing_fields": missing_fields,
             "error_message": None
         }
 
